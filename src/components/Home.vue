@@ -17,10 +17,7 @@
                 <div class="col-12 col-xs-12 col-sm-6 col-md-8">
                     <h1 class="display-5">Recent Matches</h1>
                 </div>
-                <div class="col-12 col-xs-12 col-sm-4 col-md-2">
-                    <router-link to="/events"><button type="button" class="btn btn-info float-right">View All Event</button></router-link>
-                </div>
-                <div class="col-12 col-xs-12 col-sm-4 col-md-2">
+                <div class="col-12 col-xs-12 col-sm-4 col-md-4">
                     <router-link to="/event/create"><button type="button" class="btn btn-success  float-right">Create New Event</button></router-link>
                 </div>
             </div>
