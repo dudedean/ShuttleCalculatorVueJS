@@ -4,7 +4,7 @@
 
         <div class="col-12 col-sm-12 col-xs-12">
             <!-- Header -->
-        <div class="jumbotron mt-2">
+        <div class="jumbotron jumbotron-fluid mt-2">
             <h1 class="display-3">Shuttle Calculator</h1>
             <p class="lead">This system is to calculate total fees for each person every badminton match</p>
             <hr class="my-4">
@@ -40,7 +40,7 @@
                 </div>
             </div>
             
-            <div class="col-12">
+            <div class="col-12 table-responsive-sm">
                 <table class="table table-hover">
                     <thead>
                         <tr>
@@ -51,7 +51,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr v-for="e in events" :key="e.id">
+                        <tr v-for="e in events" :key="e.id" @click="viewEvent(e.id)">
                             <td>{{ e.name }}</td>
                             <td>{{ e.place }}</td>
                             <td>{{ e.dateEvent }}</td>
@@ -100,6 +100,9 @@ export default {
             }
 
             this.pagination = pagination;
+        },
+        viewEvent(id) {
+            this.$router.push(`event/${id}`);
         }
     }
 }

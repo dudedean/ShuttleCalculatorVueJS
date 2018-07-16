@@ -10,15 +10,6 @@
                 <li class="nav-item active">
                     <router-link class="nav-link" to="/">Home</router-link>
                 </li>
-                <li class="nav-item">
-                    <router-link class="nav-link" to="/events">Events</router-link>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="#">Pricing</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="#">About</a>
-                </li>
                 </ul>
             </div>
     </div>

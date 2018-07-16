@@ -10,44 +10,62 @@
                         <div class="form-group row">
                             <label for="name" class="col-sm-2 col-md-4 col-form-label">Event Name</label>
                             <div class="col-sm-10 col-md-6">
-                                <input type="text" class="form-control" id="name" placeholder="Badminton Persahabatan">
+                                <input type="text" v-model="event.name" class="form-control" id="name" placeholder="Badminton Persahabatan">
                             </div>
                         </div>
                         <div class="form-group row">
-                            <label for="location" class="col-sm-2 col-md-4 col-form-label">Location</label>
+                            <label for="place" class="col-sm-2 col-md-4 col-form-label">Location</label>
                             <div class="col-sm-10 col-md-6">
-                                <input type="text" class="form-control" id="location" placeholder="Dewan Depo">
+                                <input type="text" v-model="event.place" class="form-control" id="place" placeholder="Dewan Depo">
                             </div>
                         </div>
                         <div class="form-group row">
                             <label for="hall" class="col-sm-2 col-md-4 col-form-label">Hall Price (RM)</label>
                             <div class="col-sm-10 col-md-6">
-                                <input type="text" class="form-control" id="hall" placeholder="15">
+                                <input type="text" v-model="event.hall" class="form-control" id="hall" placeholder="15">
                             </div>
                         </div>
                         <div class="form-group row">
                             <label for="shuttlecockfees" class="col-sm-2 col-md-4 col-form-label">Shuttlecock / Person (RM)</label>
                             <div class="col-sm-10 col-md-6">
-                                <input type="text" class="form-control" id="shuttlecockfees" placeholder="2">
+                                <input type="text" v-model="event.shuttlecockfees" class="form-control" id="shuttlecockfees" placeholder="2">
                             </div>
                         </div>
                         <div class="form-group row">
                             <label for="dateEvent" class="col-sm-2 col-md-4 col-form-label">Date</label>
                             <div class="col-sm-10 col-md-6">
-                                <datepicker v-model="state" name="uniquename" class="form-control"></datepicker>
+                                
+                                <el-date-picker
+                                    v-model="event.date"
+                                    type="date"
+                                    placeholder="Pick a day"
+                                    :picker-options="pickerOption"
+                                    format="dd-MM-yyyy"
+                                    value-format="yyyy-MM-dd">
+                                </el-date-picker>
+
                             </div>
                         </div>
                         <div class="form-group row">
                             <label for="timeEvent" class="col-sm-2 col-md-4 col-form-label">Time</label>
                             <div class="col-sm-10 col-md-6">
-                                <input type="text" class="form-control" id="timeEvent" placeholder="20:20">
+
+                                <el-time-select
+                                    v-model="event.time"
+                                    :picker-options="{
+                                        start: '18:00',
+                                        step: '00:30',
+                                        end: '23:00'
+                                    }"
+                                    placeholder="Select time">
+                                </el-time-select>
+
                             </div>
                         </div>
 
                         <div class="row">
                             <div class="col-sm-6 col-xs-6 col-md-6">
-                                <button type="submit" class="btn btn-primary float-left">Submit</button>
-                                <button type="reset" class="btn btn-primary float-left ml-4">Clear</button>
+                                <button type="submit" @click="createEvent()" class="btn btn-success float-left">Submit</button>
                             </div>
                         </div>
                 </div>
@@ -63,9 +81,50 @@
 export default {
 
     data(){
+
         return{
-            state: ''
+            pickerOption: { 
+                disabledDate : function(date) {
+                    return date < new Date();
+                }
+             },
+            event: {
+                name: '',
+                place: '',
+                hall: '',
+                shuttlecockfees: '',
+                date: '',
+                time: ''
+            }
         }
+    },
+    methods: {
+        createEvent() {
+            this.$http.post('http://shuttlecalculator.test/api/event/create',{
+                    name: this.event.name,
+                    place: this.event.place,
+                    hall: this.event.hall,
+                    shuttlecockfees: this.event.shuttlecockfees,
+                    dateEvent: this.event.date,
+                    timeEvent: this.event.time,
+                })
+                .then(response => {
+                    this.$router.push(`/event/${response.data.data.id}`);
+                    setTimeout(() => {
+                        this.open();
+                    }, 500);
+                    // console.log(response);
+                })
+                .catch(function (error) {
+                    console.log(error);
+                });
+        },
+        open() {
+            this.$message({
+                message: 'Congrats, event successfully created!.',
+                type: 'success'
+            });
+        },
     }
 
 }
