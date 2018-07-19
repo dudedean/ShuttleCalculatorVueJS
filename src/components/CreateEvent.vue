@@ -14,6 +14,12 @@
                             </div>
                         </div>
                         <div class="form-group row">
+                            <label for="eventID" class="col-sm-2 col-md-4 col-form-label">Event ID</label>
+                            <div class="col-sm-10 col-md-6">
+                                <input type="text" v-model="event.id" class="form-control" id="eventID" placeholder="20">
+                            </div>
+                        </div>
+                        <div class="form-group row">
                             <label for="place" class="col-sm-2 col-md-4 col-form-label">Location</label>
                             <div class="col-sm-10 col-md-6">
                                 <input type="text" v-model="event.place" class="form-control" id="place" placeholder="Dewan Depo">
@@ -78,6 +84,8 @@
 
 <script>
 
+import db from './firebaseInit'
+
 export default {
 
     data(){
@@ -90,6 +98,7 @@ export default {
              },
             event: {
                 name: '',
+                id: '',
                 place: '',
                 hall: '',
                 shuttlecockfees: '',
@@ -100,24 +109,39 @@ export default {
     },
     methods: {
         createEvent() {
-            this.$http.post('http://shuttlecalculator.test/api/event/create',{
-                    name: this.event.name,
-                    place: this.event.place,
-                    hall: this.event.hall,
-                    shuttlecockfees: this.event.shuttlecockfees,
-                    dateEvent: this.event.date,
-                    timeEvent: this.event.time,
-                })
-                .then(response => {
-                    this.$router.push(`/event/${response.data.data.id}`);
-                    setTimeout(() => {
-                        this.open();
-                    }, 500);
-                    // console.log(response);
-                })
-                .catch(function (error) {
-                    console.log(error);
-                });
+            // this.$http.post('http://shuttlecalculator.test/api/event/create',{
+            //         name: this.event.name,
+            //         place: this.event.place,
+            //         hall: this.event.hall,
+            //         shuttlecockfees: this.event.shuttlecockfees,
+            //         dateEvent: this.event.date,
+            //         timeEvent: this.event.time,
+            //     })
+            //     .then(response => {
+            //         this.$router.push(`/event/${response.data.data.id}`);
+            //         setTimeout(() => {
+            //             this.open();
+            //         }, 500);
+            //         // console.log(response);
+            //     })
+            //     .catch(function (error) {
+            //         console.log(error);
+            //     });
+
+            db.collection('events').add({
+                id : this.event.id,
+                name : this.event.name,
+                place : this.event.place,
+                hall : this.event.hall,
+                shuttlecockfees : this.event.shuttlecockfees,
+                dateEvent : this.event.date,
+                timeEvent : this.event.time,
+            })
+            .then(docRef => {
+                this.$router.push('/')
+            })
+
+
         },
         open() {
             this.$message({

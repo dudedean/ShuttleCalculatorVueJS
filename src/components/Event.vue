@@ -67,7 +67,7 @@
                         <div class="form-group row">
                         <label for="eventID" class="col-4 col-sm-2 col-form-label">Event ID</label>
                         <div class="col-8 col-sm-10">
-                            <input type="text" readonly="" class="form-control-plaintext" id="eventID" :value="event.id">
+                            <input type="text" readonly="" class="form-control-plaintext" id="eventID" v-model="event.id">
                         </div>
                         </div>
 
@@ -191,7 +191,6 @@
                                             <th scope="col">Shuttlecock used</th>
                                             <th scope="col"></th>
                                             <th scope="col"></th>
-                                            <th scope="col"></th>
                                             <th scope="col">Total (RM)</th>
                                         </tr>
                                     </thead>
@@ -214,7 +213,7 @@
                                             <!-- <td><el-button type="danger" icon="el-icon-delete" circle @click="deletePlayer(p.id)"></el-button></td> -->
                                             <td><button type="button" class="btn btn-danger" @click="deletePlayer(p.id)">Delete</button></td>
                                             <!-- <td><el-button icon="el-icon-tickets" circle @click="calculateFees(index,p.id)"></el-button></td> -->
-                                            <td><button type="button" class="btn btn-primary" @click="calculateFees(index,p.id)">Calculate</button></td>
+                                            <!-- <td><button type="button" class="btn btn-primary" @click="calculateFees(index,p.id)">Calculate</button></td> -->
                                             <td>{{ p.totalFee }}</td>
                                         </tr>
                                     </tbody>
@@ -234,25 +233,26 @@
 </template>
 
 <script>
+
+import db from './firebaseInit'
+
 export default {
     data() {
         return {
             event: {
                 name: '',
+                id: this.$route.params.event_id,
                 place: '',
                 dateEvent: '',
                 timeEvent: '',
                 hall: '',
-                shuttlecockfees: ''
+                shuttlecockfees: '',
             }, 
-            event_id: this.$route.params.id,
+            sizeCol : 0,
             addPlayer: 0,
             players: [],
             newPlayer: {
                 name: '',
-                event_id : this.$route.params.id,
-                shuttlecocks: 0,
-                totalFee: 0
             },
             edit: 0,
             editEvent: 0,
@@ -264,30 +264,58 @@ export default {
         }
     },
     created() {
-        this.fetchEvent();
         this.fetchPlayers();
+    },
+    beforeRouteEnter (to, from, next) {
+        db.collection('events').where('id','==',to.params.event_id).get()
+        .then(querySnapshot => {
+            querySnapshot.forEach( doc => {
+                next(vm => {
+
+                    vm.event.name = doc.data().name
+                    vm.event.place = doc.data().place
+                    vm.event.dateEvent = doc.data().dateEvent
+                    vm.event.timeEvent = doc.data().timeEvent
+                    vm.event.hall = doc.data().hall
+                    vm.event.shuttlecockfees = doc.data().shuttlecockfees
+                })
+            })
+        })
+    },
+    watch: {
+        '$route' : 'fetchEvent'
     },
     methods: {
         fetchEvent(){
-            this.$http.get(`http://shuttlecalculator.test/api/event/${this.event_id}`)
-                .then(response => {
-                    this.event = response.data.data;
+
+            db.collection('events').where('id', '==', this.event.id).get()
+            .then(querySnapshot => {
+                querySnapshot.forEach(doc => {
+
+                    this.event.name = doc.data().name;
+                    this.event.place = doc.data().place;
+                    this.event.dateEvent = doc.data().dateEvent;
+                    this.event.timeEvent = doc.data().timeEvent;
+                    this.event.hall = doc.data().hall;
+                    this.event.shuttlecockfees = doc.data().shuttlecockfees;
+
+                    
                 })
-                .catch(error=>console.log)
+            })
         },
         deleteEvent(){
 
                 var result = confirm("Are you sure you want to delete this event?");
 
                 if(result == true){
-                    this.$http.delete('http://shuttlecalculator.test/api/event/'+this.event_id)
-                    .then(response => {
-                        this.$router.push(`/`);
-                        setTimeout(() => {
-                            this.open('Event successfully deleted!');
-                        }, 500);
+                
+                    db.collection('events').where('id', '==', this.$route.params.event_id).get()
+                    .then(querySnapshot => {
+                        querySnapshot.forEach(doc => {
+                            doc.ref.delete();
+                            this.$router.push('/');
+                        })
                     })
-                    .catch(error=>console.log)
             }
                 
         },
@@ -299,90 +327,118 @@ export default {
         },
         fetchPlayers() {
 
-            this.$http.get(`http://shuttlecalculator.test/api/players/${this.event_id}`)
-                .then(response => {
-                    this.players = response.data.data;
+            db.collection('players').where('event_id','==',this.event.id).get()
+            .then(querySnapshot => {
+                querySnapshot.forEach((doc,index) => {
+                    const data = {
+                        id : doc.data().id,
+                        name : doc.data().name,
+                        shuttlecocks : doc.data().shuttlecocks,
+                        totalFee : doc.data().totalFee,
+                    }
+                    
+                    this.players.push(data);
                 })
-                .catch(error=>console.log)
+
+                this.sizeCol = querySnapshot.size;
+            })
 
         },
         createPlayer(){
-            this.$http.post('http://shuttlecalculator.test/api/player',{
-                    name: this.newPlayer.name,
-                    event_id: this.newPlayer.event_id,
-                    shuttlecocks: this.newPlayer.shuttlecocks,
-                    totalFee: this.newPlayer.totalFee
-                })
-                .then(response => {
-                    this.fetchPlayers();
-                    this.newPlayer.name = "";
-                })
-                .catch(function (error) {
-                    console.log(error);
-                });
+            
+            db.collection('players').add({
+                id : this.sizeCol++,
+                name : this.newPlayer.name,
+                event_id : this.event.id,
+                shuttlecocks : 0,
+                totalFee : 0.0,
+                
+            })
+            .then(docRef => {
+                this.newPlayer.name = ''
+                this.updateFees()
+            })
+
         },
         deletePlayer(id){
 
             var result = confirm("Are you sure you want to delete this player?");
 
-            if(result == true){
-                this.$http.delete('http://shuttlecalculator.test/api/player/'+id)
-                .then(response => {
-                    this.fetchPlayers();
-                })
-                .catch(error=>console.log)
+                if(result == true){
+                
+                    db.collection('players').where('id', '==', id).get()
+                    .then(querySnapshot => {
+                        querySnapshot.forEach(doc => {
+                            doc.ref.delete();
+                        })
+                    })
+                    .then(()=>{
+                        this.players = []
+                        this.updateFees()
+                    })
             }
 
                 
         },
         editPlayer(id,index){
+            // var total= (this.event.hall / this.players.length) + (this.event.shuttlecockfees * this.players[index].shuttlecocks);
+            //     total = total.toFixed(2);
 
-            this.$http.put('http://shuttlecalculator.test/api/player/'+id,{
-                    shuttlecocks: this.players[index].shuttlecocks,
-                    totalFee: this.players[index].totalFee,
+            db.collection('players').where('id', '==', id).get()
+            .then(querySnapshot => {
+                querySnapshot.forEach(doc => {
+                    doc.ref.update({
+                        shuttlecocks : this.players[index].shuttlecocks,
+                    })
+                    .then(() => {
+                        this.edit = 0
+                        this.updateFees()
+                    })
                 })
-                .then(response => {
-                    this.edit = 0;
-                    this.calculateFees(index,id);
-                })
-                .catch(function (error) {
-                    console.log(error);
-                });
+            })
+            
+            
         },
-        calculateFees(index,id){
+        updateFees(){
 
-            var total= (this.event.hall / this.players.length) + (this.event.shuttlecockfees * this.players[index].shuttlecocks);
-                total = total.toFixed(2);
-                
-                this.$http.put('http://shuttlecalculator.test/api/player/'+id,{
-                    totalFee: total,
-                    shuttlecocks: this.players[index].shuttlecocks,
+            db.collection('players').where('event_id','==',this.event.id).get()
+            .then(querySnapshot => {
+                querySnapshot.forEach((doc,index) => {
+
+                    var total= (this.event.hall / querySnapshot.size) + (this.event.shuttlecockfees * parseFloat(doc.data().shuttlecocks));
+                    total = total.toFixed(2);
+
+                    doc.ref.update({
+                        totalFee : total
+                        // totalFee : total
+                    })
                 })
-                .then(response => {
-                    this.fetchPlayers();                    
-                })
-                .catch(function (error) {
-                    console.log(error);
-                });
+            }).then(() => {
+                        this.edit = 0
+                        this.players=[]
+                        this.fetchPlayers()
+                    })
+            
         },
         updateEvent(){
 
-            this.$http.put('http://shuttlecalculator.test/api/event/'+this.event_id,{
-                    name : this.event.name,
-                    place : this.event.place,
-                    dateEvent : this.event.dateEvent,
-                    timeEvent : this.event.timeEvent,
-                    hall : this.event.hall,
-                    shuttlecockfees : this.event.shuttlecockfees,
+            db.collection('events').where('id', '==', this.event.id).get()
+            .then(querySnapshot => {
+                querySnapshot.forEach(doc => {
+                    doc.ref.update({
+                        name : this.event.name,
+                        id : this.event.id,
+                        place : this.event.place,
+                        dateEvent : this.event.dateEvent,
+                        timeEvent : this.event.timeEvent,
+                        hall : this.event.hall,
+                        shuttlecockfees : this.event.shuttlecockfees,
+                    }).then(() => {
+                        this.editEvent = 0;
+                        this.fetchEvent();
+                    })
                 })
-                .then(response => {
-                    this.editEvent = 0;
-                    this.fetchEvent();
-                })
-                .catch(function (error) {
-                    console.log(error);
-                });
-
+            })
         }
     }
 }

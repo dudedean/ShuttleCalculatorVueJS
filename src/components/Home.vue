@@ -5,8 +5,8 @@
         <div class="col-12 col-sm-12 col-xs-12">
             <!-- Header -->
         <div class="jumbotron jumbotron-fluid mt-2">
-            <h1 class="display-3">Shuttle Calculator</h1>
-            <p class="lead">This system is to calculate total fees for each person every badminton match</p>
+            <h1 class="display-3 text-center">Shuttle Calculator</h1>
+            <p class="text-center lead">This system is to calculate total fees for each person every badminton match</p>
             <hr class="my-4">
         </div>
 
@@ -51,12 +51,14 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr v-for="e in events" :key="e.id" @click="viewEvent(e.id)">
-                            <td>{{ e.name }}</td>
-                            <td>{{ e.place }}</td>
-                            <td>{{ e.dateEvent }}</td>
-                            <td>{{ e.timeEvent }}</td>
-                        </tr>
+
+                    <router-link :to="{name : 'event', params: {event_id : e.event_id}}" tag="tr" v-for="e in events" :key="e.id">
+                                <td>{{ e.name }}</td>
+                                <td>{{ e.place }}</td>
+                                <td>{{ e.dateEvent }}</td>
+                                <td>{{ e.timeEvent }}</td>
+                    </router-link>
+                    
                     </tbody>
                 </table> 
             </div>
@@ -71,7 +73,11 @@
 </template>
 
 <script>
+
+import db from './firebaseInit'
+
 export default {
+
     data() {
         return {
             events: [],
@@ -82,13 +88,32 @@ export default {
         this.fetchEvents();
     },
     methods: {
-        fetchEvents(page_url) {
-            let vm = this;
-            page_url = page_url || 'http://shuttlecalculator.test/api/events'
-            this.axios.get(page_url)
-            .then((response) => {
-                this.events = response.data.data;
-                vm.makePagination(response.data.meta, response.data.links);
+        fetchEvents() {
+            // let vm = this;
+            // page_url = page_url || 'http://shuttlecalculator.test/api/events'
+            // this.axios.get(page_url)
+            // .then((response) => {
+            //     this.events = response.data.data;
+            //     vm.makePagination(response.data.meta, response.data.links);
+            // })
+
+        db.collection('events').orderBy('dateEvent').get()
+            .then(querySnapshot => {
+                querySnapshot.forEach(doc => {
+                    console.log(doc.data);
+                    const data = {
+                        id : doc.id,
+                        event_id : doc.data().id,
+                        name : doc.data().name,
+                        place : doc.data().place,
+                        dateEvent : doc.data().dateEvent,
+                        timeEvent : doc.data().timeEvent,
+                        hall : doc.data().hall,
+                        shuttlecockfees : doc.data().shuttlecockfees
+                    }
+
+                    this.events.push(data);
+                })
             })
         },
         makePagination(meta,links) {
