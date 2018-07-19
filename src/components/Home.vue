@@ -22,7 +22,7 @@
                 </div>
             </div>
 
-            <div class="col-12">
+            <!-- <div class="col-12">
                 <div>
                     <ul class="pagination">
                         <li v-bind:class="[{disabled: !pagination.prev_page_url}]" class="page-item">
@@ -38,7 +38,7 @@
                         </li>
                     </ul>
                 </div>
-            </div>
+            </div> -->
             
             <div class="col-12 table-responsive-sm">
                 <table class="table table-hover">

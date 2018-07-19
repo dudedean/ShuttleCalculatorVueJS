@@ -13,12 +13,12 @@
                                 <input type="text" v-model="event.name" class="form-control" id="name" placeholder="Badminton Persahabatan">
                             </div>
                         </div>
-                        <div class="form-group row">
+                        <!-- <div class="form-group row">
                             <label for="eventID" class="col-sm-2 col-md-4 col-form-label">Event ID</label>
                             <div class="col-sm-10 col-md-6">
                                 <input type="text" v-model="event.id" class="form-control" id="eventID" placeholder="20">
                             </div>
-                        </div>
+                        </div> -->
                         <div class="form-group row">
                             <label for="place" class="col-sm-2 col-md-4 col-form-label">Location</label>
                             <div class="col-sm-10 col-md-6">
@@ -45,7 +45,6 @@
                                     v-model="event.date"
                                     type="date"
                                     placeholder="Pick a day"
-                                    :picker-options="pickerOption"
                                     format="dd-MM-yyyy"
                                     value-format="yyyy-MM-dd">
                                 </el-date-picker>
@@ -92,9 +91,9 @@ export default {
 
         return{
             pickerOption: { 
-                disabledDate : function(date) {
-                    return date < new Date();
-                }
+                // disabledDate : function(date) {
+                //     return date < new Date();
+                // }
              },
             event: {
                 name: '',
@@ -104,32 +103,18 @@ export default {
                 shuttlecockfees: '',
                 date: '',
                 time: ''
-            }
+            },
+            size: 0
         }
+    },
+    created() {
+        this.fetchEvents();
     },
     methods: {
         createEvent() {
-            // this.$http.post('http://shuttlecalculator.test/api/event/create',{
-            //         name: this.event.name,
-            //         place: this.event.place,
-            //         hall: this.event.hall,
-            //         shuttlecockfees: this.event.shuttlecockfees,
-            //         dateEvent: this.event.date,
-            //         timeEvent: this.event.time,
-            //     })
-            //     .then(response => {
-            //         this.$router.push(`/event/${response.data.data.id}`);
-            //         setTimeout(() => {
-            //             this.open();
-            //         }, 500);
-            //         // console.log(response);
-            //     })
-            //     .catch(function (error) {
-            //         console.log(error);
-            //     });
 
             db.collection('events').add({
-                id : this.event.id,
+                id : this.size++,
                 name : this.event.name,
                 place : this.event.place,
                 hall : this.event.hall,
@@ -149,6 +134,14 @@ export default {
                 type: 'success'
             });
         },
+        fetchEvents(){
+
+            db.collection('events').get()
+            .then(querySnapshot => {
+                this.size = querySnapshot.size;
+            })
+
+        }
     }
 
 }
