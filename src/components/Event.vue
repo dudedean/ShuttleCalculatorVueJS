@@ -265,6 +265,7 @@ export default {
     },
     created() {
         this.fetchPlayers();
+        
     },
     beforeRouteEnter (to, from, next) {
         db.collection('events').where('id','==',to.params.event_id).get()
@@ -288,7 +289,7 @@ export default {
     methods: {
         fetchEvent(){
 
-            db.collection('events').where('id', '==', this.event.id).get()
+            db.collection('events').where('id', '==', this.$route.params.event_id).get()
             .then(querySnapshot => {
                 querySnapshot.forEach(doc => {
 
@@ -299,7 +300,6 @@ export default {
                     this.event.hall = doc.data().hall;
                     this.event.shuttlecockfees = doc.data().shuttlecockfees;
 
-                    
                 })
             })
         },
@@ -329,7 +329,7 @@ export default {
 
             db.collection('players').where('event_id','==',this.event.id).get()
             .then(querySnapshot => {
-                querySnapshot.forEach((doc,index) => {
+                querySnapshot.forEach((doc) => {
                     const data = {
                         id : doc.data().id,
                         name : doc.data().name,
@@ -354,7 +354,7 @@ export default {
                 totalFee : 0.0,
                 
             })
-            .then(docRef => {
+            .then(() => {
                 this.newPlayer.name = ''
                 this.updateFees()
             })
@@ -390,12 +390,11 @@ export default {
                     doc.ref.update({
                         shuttlecocks : this.players[index].shuttlecocks,
                     })
-                    .then(() => {
+                })
+            }).then(() => {
                         this.edit = 0
                         this.updateFees()
                     })
-                })
-            })
             
             
         },
@@ -403,14 +402,13 @@ export default {
 
             db.collection('players').where('event_id','==',this.event.id).get()
             .then(querySnapshot => {
-                querySnapshot.forEach((doc,index) => {
+                querySnapshot.forEach((doc) => {
 
                     var total= (this.event.hall / querySnapshot.size) + (this.event.shuttlecockfees * parseFloat(doc.data().shuttlecocks));
                     total = total.toFixed(2);
 
                     doc.ref.update({
                         totalFee : total
-                        // totalFee : total
                     })
                 })
             }).then(() => {
